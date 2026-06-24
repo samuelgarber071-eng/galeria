@@ -471,7 +471,7 @@
 
                 const imageFiles = files.filter(file => file.type.startsWith('image/'));
                 
-                // Processa todas as imagens em paralelo de maneira limpa
+                // Processa todas as imagens em paralelo
                 const readResults = await Promise.all(imageFiles.map(file => readFileAsDataURL(file)));
                 
                 readResults.forEach((result, index) => {
