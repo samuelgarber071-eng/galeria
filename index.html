@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Código do Visualizador de Fotos - Abas</title>
+    <title>Visualizador de Fotos Offline OS</title>
     <style>
         :root {
-            --bg-main: #121212;
-            --bg-card: #1e1e1e;
-            --bg-tab-active: #2d2d2d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
             --text-color: #ffffff;
             --accent-color: #4f46e5;
             --accent-hover: #6366f1;
-            --border-color: #333333;
+            --danger-color: #ef4444;
+            --danger-hover: #f87171;
+            --success-color: #10b981;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-main);
+            background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 20px;
@@ -30,587 +31,496 @@
             text-align: center;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
         }
 
-        h1 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
-        p { color: #aaa; margin-top: 0; font-size: 0.9rem; }
+        h1 { margin-bottom: 5px; font-weight: 600; }
+        .subtitle { color: #aaa; font-size: 0.9rem; margin-top: 0; }
 
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            background-color: var(--bg-card);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Sistema de Abas */
-        .tabs-header {
+        /* Layout Principal */
+        .main-container {
             display: flex;
-            background-color: #151515;
-            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 1200px;
+            gap: 20px;
         }
 
-        .tab-btn {
-            padding: 15px 25px;
+        /* Menu lateral */
+        .sidebar {
+            width: 250px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            height: fit-content;
+        }
+
+        .sidebar h3 { margin-top: 0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;}
+
+        .folder-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+        }
+
+        .folder-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: background 0.2s;
+        }
+
+        .folder-item:hover, .folder-item.active {
+            background-color: #2d2d2d;
+        }
+
+        .folder-item.active {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .folder-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-folder-btn {
             background: none;
             border: none;
-            color: #888;
-            font-weight: bold;
-            font-size: 1rem;
+            color: var(--danger-color);
             cursor: pointer;
-            transition: all 0.2s;
-            border-right: 1px solid var(--border-color);
-        }
-
-        .tab-btn:hover {
-            color: #fff;
-            background-color: rgba(255,255,255,0.02);
-        }
-
-        .tab-btn.active {
-            color: var(--text-color);
-            background-color: var(--bg-card);
-            border-bottom: 2px solid var(--accent-color);
-        }
-
-        /* Conteúdo das Abas */
-        .tab-content {
+            font-weight: bold;
             display: none;
-            padding: 20px;
+            font-size: 1.1rem;
         }
 
-        .tab-content.active {
+        .folder-item:hover .delete-folder-btn {
             display: block;
         }
 
-        /* Estilização do Bloco de Código */
-        pre {
-            margin: 0;
-            background-color: #0b0b0b;
-            padding: 15px;
+        .btn-side {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
             border-radius: 6px;
-            overflow-x: auto;
-            border: 1px solid #222;
-        }
-
-        code {
-            font-family: 'Consolas', 'Courier New', Courier, monospace;
-            color: #34d399; /* Cor verde para simular código */
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        .copy-btn {
-            display: block;
+            cursor: pointer;
             margin-bottom: 10px;
-            padding: 8px 15px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-side:hover { background: #3a3a3a; }
+
+        /* Área de Conteúdo */
+        .content-area {
+            flex: 1; /* CORRIGIDO: de flex-1: 1 para flex: 1 */
+            width: calc(100% - 270px);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .file-input-label {
             background-color: var(--accent-color);
             color: white;
-            border: none;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.85rem;
             transition: background 0.2s;
-            float: right;
+        }
+        .file-input-label:hover { background-color: var(--accent-hover); }
+        #file-input { display: none; }
+
+        /* Grid de Fotos */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            width: 100%;
         }
 
-        .copy-btn:hover { background-color: var(--accent-hover); }
-        .clearfix::after { content: ""; clear: both; display: table; }
+        .photo-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            /* CORRIGIDO: Removido 'group: hover;' inválido */
+        }
+
+        .img-container {
+            width: 100%;
+            height: 180px;
+            background-color: #151515;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .img-container:hover img {
+            transform: scale(1.05);
+        }
+
+        .photo-info {
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #ccc;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Ações do Card */
+        .card-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 5px 10px 10px 10px;
+            gap: 5px;
+        }
+
+        .btn-action {
+            flex: 1;
+            background: #2a2a2a;
+            border: none;
+            color: white;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .btn-action.delete { background: var(--danger-color); }
+        .btn-action.delete:hover { background: var(--danger-hover); }
+        .btn-action.restore { background: var(--success-color); }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; z-index: 1000;
+            transition: opacity 0.3s;
+        }
+        .lightbox.active { opacity: 1; pointer-events: auto; }
+        .lightbox-img { max-width: 90%; max-height: 85%; object-fit: contain; }
+        .close-btn { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 35px; background: none; border: none; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .content-area { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Código Fonte - Visualizador de Fotos OS</h1>
-        <p>Navegue entre as abas abaixo para visualizar o código de cada camada separadamente.</p>
+        <h1>Visualizador de Fotos OS</h1>
+        <p class="subtitle">🔒 100% Offline | Pastas e Lixeira locais</p>
     </header>
 
-    <div class="container">
-        <div class="tabs-header">
-            <button class="tab-btn active" onclick="openTab(event, 'html-tab')">🌐 Estrutura (HTML)</button>
-            <button class="tab-btn" onclick="openTab(event, 'css-tab')">🎨 Estilização (CSS)</button>
-            <button class="tab-btn" onclick="openTab(event, 'js-tab')">⚙️ Lógica (JavaScript)</button>
-        </div>
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>Pastas</h3>
+            <ul class="folder-list" id="folders-container"></ul>
+            <button class="btn-side" id="add-folder-btn">+ Criar Pasta</button>
+            <hr style="border-color: #333; margin: 15px 0;">
+            <div class="folder-item" id="trash-tab">
+                <span class="folder-name">🗑️ Lixeira</span>
+                <span id="trash-count">(0)</span>
+            </div>
+        </aside>
 
-        <div id="html-tab" class="tab-content active clearfix">
-            <button class="copy-btn" onclick="copyCode('html-code')">Copiar HTML</button>
-            <div class="clearfix"></div>
-            <pre><code id="html-code">&lt;!-- Estrutura HTML Principal --&gt;
-&lt;header&gt;
-    &lt;h1&gt;Visualizador de Fotos OS&lt;/h1&gt;
-    &lt;p class="subtitle"&gt;🔒 100% Offline | Pastas e Lixeira locais&lt;/p&gt;
-&lt;/header&gt;
+        <main class="content-area">
+            <div class="toolbar">
+                <h2 id="current-view-title" style="margin:0; font-size: 1.4rem;">Minhas Fotos</h2>
+                <div id="upload-box">
+                    <label for="file-input" class="file-input-label">Adicionar Fotos</label>
+                    <input type="file" id="file-input" accept="image/*" multiple>
+                </div>
+            </div>
 
-&lt;div class="main-container"&gt;
-    &lt;aside class="sidebar"&gt;
-        &lt;h3&gt;Pastas&lt;/h3&gt;
-        &lt;ul class="folder-list" id="folders-container"&gt;&lt;/ul&gt;
-        &lt;button class="btn-side" id="add-folder-btn"&gt;+ Criar Pasta&lt;/button&gt;
-        &lt;hr style="border-color: #333; margin: 15px 0;"&gt;
-        &lt;div class="folder-item" id="trash-tab"&gt;
-            &lt;span class="folder-name"&gt;🗑️ Lixeira&lt;/span&gt;
-            &lt;span id="trash-count"&gt;(0)&lt;/span&gt;
-        &lt;/div&gt;
-    &lt;/aside&gt;
+            <div class="gallery-grid" id="gallery-grid"></div>
+        </main>
+    </div>
 
-    &lt;main class="content-area"&gt;
-        &lt;div class="toolbar"&gt;
-            &lt;h2 id="current-view-title" style="margin:0; font-size: 1.4rem;"&gt;Minhas Fotos&lt;/h2&gt;
-            &lt;div id="upload-box"&gt;
-                &lt;label for="file-input" class="file-input-label"&gt;Adicionar Fotos&lt;/label&gt;
-                &lt;input type="file" id="file-input" accept="image/*" multiple&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
+    <div class="lightbox" id="lightbox">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <img class="lightbox-img" id="lightbox-img" src="" alt="">
+    </div>
 
-        &lt;div class="gallery-grid" id="gallery-grid"&gt;&lt;/div&gt;
-    &lt;/main&gt;
-&lt;/div&gt;
+    <script>
+        // Banco de dados em memória e sincronizado com LocalStorage
+        let appState = {
+            folders: ['Minhas Fotos', 'Viagens', 'Trabalho'],
+            currentFolder: 'Minhas Fotos',
+            isTrashView: false,
+            photos: [] // {id, name, src, folder, isDeleted: false}
+        };
 
-&lt;div class="lightbox" id="lightbox"&gt;
-    &lt;button class="close-btn" id="close-btn"&gt;&amp;times;&lt;/button&gt;
-    &lt;img class="lightbox-img" id="lightbox-img" src="" alt=""&gt;
-&lt;/div&gt;</code></pre>
-        </div>
-
-        <div id="css-tab" class="tab-content clearfix">
-            <button class="copy-btn" onclick="copyCode('css-code')">Copiar CSS</button>
-            <div class="clearfix"></div>
-            <pre><code id="css-code">:root {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --text-color: #ffffff;
-    --accent-color: #4f46e5;
-    --accent-hover: #6366f1;
-    --danger-color: #ef4444;
-    --danger-hover: #f87171;
-    --success-color: #10b981;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-header {
-    text-align: center;
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 1200px;
-}
-
-h1 { margin-bottom: 5px; font-weight: 600; }
-.subtitle { color: #aaa; font-size: 0.9rem; margin-top: 0; }
-
-.main-container {
-    display: flex;
-    width: 100%;
-    max-width: 1200px;
-    gap: 20px;
-}
-
-.sidebar {
-    width: 250px;
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
-    box-sizing: border-box;
-    height: fit-content;
-}
-
-.sidebar h3 { margin-top: 0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;}
-
-.folder-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 15px 0;
-}
-
-.folder-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 5px;
-    transition: background 0.2s;
-}
-
-.folder-item:hover, .folder-item.active { background-color: #2d2d2d; }
-.folder-item.active { border-left: 4px solid var(--accent-color); }
-.folder-name { display: flex; align-items: center; gap: 8px; }
-
-.delete-folder-btn {
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    font-weight: bold;
-    display: none;
-    font-size: 1.1rem;
-}
-
-.folder-item:hover .delete-folder-btn { display: block; }
-
-.btn-side {
-    width: 100%;
-    padding: 10px;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-.btn-side:hover { background: #3a3a3a; }
-
-.content-area {
-    flex: 1;
-    width: calc(100% - 270px);
-}
-
-.toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-.file-input-label {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-.file-input-label:hover { background-color: var(--accent-hover); }
-#file-input { display: none; }
-
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-    width: 100%;
-}
-
-.photo-card {
-    background-color: var(--card-bg);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    position: relative;
-}
-
-.img-container {
-    width: 100%;
-    height: 180px;
-    background-color: #151515;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-}
-.img-container:hover img { transform: scale(1.05); }
-
-.photo-info {
-    padding: 10px;
-    font-size: 0.85rem;
-    color: #ccc;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.card-actions {
-    display: flex;
-    justify-content: space-around;
-    padding: 5px 10px 10px 10px;
-    gap: 5px;
-}
-
-.btn-action {
-    flex: 1;
-    background: #2a2a2a;
-    border: none;
-    color: white;
-    padding: 6px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: background 0.2s;
-}
-.btn-action.delete { background: var(--danger-color); }
-.btn-action.delete:hover { background: var(--danger-hover); }
-.btn-action.restore { background: var(--success-color); }
-
-.lightbox {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.95);
-    display: flex; justify-content: center; align-items: center;
-    opacity: 0; pointer-events: none; z-index: 1000;
-    transition: opacity 0.3s;
-}
-.lightbox.active { opacity: 1; pointer-events: auto; }
-.lightbox-img { max-width: 90%; max-height: 85%; object-fit: contain; }
-.close-btn { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 35px; background: none; border: none; cursor: pointer; }
-
-@media (max-width: 768px) {
-    .main-container { flex-direction: column; }
-    .sidebar { width: 100%; }
-    .content-area { width: 100%; }
-}</code></pre>
-        </div>
-
-        <div id="js-tab" class="tab-content clearfix">
-            <button class="copy-btn" onclick="copyCode('js-code')">Copiar JS</button>
-            <div class="clearfix"></div>
-            <pre><code id="js-code">// Estado global da aplicação
-let appState = {
-    folders: ['Minhas Fotos', 'Viagens', 'Trabalho'],
-    currentFolder: 'Minhas Fotos',
-    isTrashView: false,
-    photos: [] 
-};
-
-// Carrega os dados persistidos no LocalStorage
-if(localStorage.getItem('photo_os_state')) {
-    try {
-        const saved = JSON.parse(localStorage.getItem('photo_os_state'));
-        appState = saved;
-        if (!appState.folders.includes(appState.currentFolder)) {
-            appState.currentFolder = appState.folders[0] || '';
+        // Tenta carregar dados anteriores salvos no navegador
+        if(localStorage.getItem('photo_os_state')) {
+            try {
+                const saved = JSON.parse(localStorage.getItem('photo_os_state'));
+                appState = saved;
+                // Garante reset de view padrão ao iniciar se não houver pasta ativa válida
+                if (!appState.folders.includes(appState.currentFolder)) {
+                    appState.currentFolder = appState.folders[0] || '';
+                }
+                appState.isTrashView = false;
+            } catch(e) {
+                console.error("Erro ao carregar o estado do localStorage", e);
+            }
         }
-        appState.isTrashView = false;
-    } catch(e) {
-        console.error("Erro ao carregar o estado", e);
-    }
-}
 
-function saveState() {
-    try {
-        localStorage.setItem('photo_os_state', JSON.stringify(appState));
-    } catch (e) {
-        alert("⚠️ Limite de espaço do LocalStorage atingido (~5MB)!");
-    }
-}
+        function saveState() {
+            try {
+                localStorage.setItem('photo_os_state', JSON.stringify(appState));
+            } catch (e) {
+                alert("⚠️ Limite de espaço atingido! O navegador não conseguiu salvar esta última foto permanentemente (Limite do LocalStorage é de ~5MB).");
+            }
+        }
 
-// Elementos carregados do DOM
-const foldersContainer = document.getElementById('folders-container');
-const galleryGrid = document.getElementById('gallery-grid');
-const currentViewTitle = document.getElementById('current-view-title');
-const fileInput = document.getElementById('file-input');
-const uploadBox = document.getElementById('upload-box');
-const trashTab = document.getElementById('trash-tab');
-const trashCount = document.getElementById('trash-count');
-const addFolderBtn = document.getElementById('add-folder-btn');
-const lightbox = document.getElementById('lightbox');
-const lightboxImg = document.getElementById('lightbox-img');
-const closeBtn = document.getElementById('close-btn');
+        // Elementos DOM
+        const foldersContainer = document.getElementById('folders-container');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const currentViewTitle = document.getElementById('current-view-title');
+        const fileInput = document.getElementById('file-input');
+        const uploadBox = document.getElementById('upload-box');
+        const trashTab = document.getElementById('trash-tab');
+        const trashCount = document.getElementById('trash-count');
+        const addFolderBtn = document.getElementById('add-folder-btn');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const closeBtn = document.getElementById('close-btn');
 
-function init() {
-    renderFolders();
-    renderPhotos();
-    setupEvents();
-}
-
-function renderFolders() {
-    foldersContainer.innerHTML = '';
-    appState.folders.forEach(folder => {
-        const li = document.createElement('li');
-        li.className = `folder-item \${appState.currentFolder === folder && !appState.isTrashView ? 'active' : ''}`;
-        li.innerHTML = `
-            &lt;span class="folder-name"&gt;📁 \${folder}&lt;/span&gt;
-            &lt;button class="delete-folder-btn" data-folder="\${folder}"&gt;&amp;times;&lt;/button&gt;
-        `;
-
-        li.addEventListener('click', (e) => {
-            if(e.target.classList.contains('delete-folder-btn')) return;
-            appState.currentFolder = folder;
-            appState.isTrashView = false;
+        // Inicialização
+        function init() {
             renderFolders();
             renderPhotos();
-        });
+            setupEvents();
+        }
 
-        li.querySelector('.delete-folder-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if(confirm(`Deseja apagar a pasta "\${folder}"?`)) {
-                appState.photos.forEach(p => { if(p.folder === folder) p.isDeleted = true; });
-                appState.folders = appState.folders.filter(f => f !== folder);
-                appState.currentFolder = appState.folders[0] || '';
+        function renderFolders() {
+            foldersContainer.innerHTML = '';
+            appState.folders.forEach(folder => {
+                const li = document.createElement('li');
+                li.className = `folder-item ${appState.currentFolder === folder && !appState.isTrashView ? 'active' : ''}`;
+                
+                li.innerHTML = `
+                    <span class="folder-name">📁 ${folder}</span>
+                    <button class="delete-folder-btn" data-folder="${folder}">&times;</button>
+                `;
+
+                li.addEventListener('click', (e) => {
+                    if(e.target.classList.contains('delete-folder-btn')) return;
+                    appState.currentFolder = folder;
+                    appState.isTrashView = false;
+                    renderFolders();
+                    renderPhotos();
+                });
+
+                // Botão de deletar pasta
+                li.querySelector('.delete-folder-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if(confirm(`Deseja apagar a pasta "${folder}"? As fotos dela irão para a lixeira.`)) {
+                        appState.photos.forEach(p => {
+                            if(p.folder === folder) p.isDeleted = true;
+                        });
+                        appState.folders = appState.folders.filter(f => f !== folder);
+                        appState.currentFolder = appState.folders[0] || '';
+                        saveState();
+                        renderFolders();
+                        renderPhotos();
+                    }
+                });
+
+                foldersContainer.appendChild(li);
+            });
+
+            // Atualiza aba da Lixeira
+            if(appState.isTrashView) {
+                trashTab.classList.add('active');
+            } else {
+                trashTab.classList.remove('active');
+            }
+            const tCount = appState.photos.filter(p => p.isDeleted).length;
+            trashCount.textContent = `(${tCount})`;
+        }
+
+        function renderPhotos() {
+            galleryGrid.innerHTML = '';
+            
+            if (appState.isTrashView) {
+                currentViewTitle.textContent = "Lixeira";
+                uploadBox.style.display = 'none';
+            } else {
+                currentViewTitle.textContent = appState.currentFolder || "Nenhuma pasta selecionada";
+                uploadBox.style.display = appState.currentFolder ? 'block' : 'none';
+            }
+
+            const filteredPhotos = appState.photos.filter(photo => {
+                if (appState.isTrashView) return photo.isDeleted;
+                return !photo.isDeleted && photo.folder === appState.currentFolder;
+            });
+
+            if(filteredPhotos.length === 0) {
+                galleryGrid.innerHTML = `<p style="color: #666; grid-column: 1/-1; text-align: center; margin-top: 40px;">Nenhuma foto por aqui.</p>`;
+                return;
+            }
+
+            filteredPhotos.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+
+                card.innerHTML = `
+                    <div class="img-container">
+                        <img src="${photo.src}" alt="${photo.name}">
+                    </div>
+                    <div class="photo-info">${photo.name}</div>
+                    <div class="card-actions">
+                        ${appState.isTrashView ? 
+                            `<button class="btn-action restore" onclick="restorePhoto('${photo.id}')">Restaurar</button>
+                             <button class="btn-action delete" onclick="permaDeletePhoto('${photo.id}')">Excluir</button>` : 
+                            `<button class="btn-action delete" onclick="deletePhoto('${photo.id}')">Mover p/ Lixeira</button>`
+                        }
+                    </div>
+                `;
+
+                // Clique para abrir o Lightbox
+                card.querySelector('.img-container').addEventListener('click', () => {
+                    lightboxImg.src = photo.src;
+                    lightbox.classList.add('active');
+                });
+
+                galleryGrid.appendChild(card);
+            });
+        }
+
+        // Ações Globais expostas no escopo window para os botões dinâmicos
+        window.deletePhoto = function(id) {
+            const photo = appState.photos.find(p => p.id === id);
+            if(photo) {
+                photo.isDeleted = true;
                 saveState();
                 renderFolders();
                 renderPhotos();
             }
-        });
-        foldersContainer.appendChild(li);
-    });
+        }
 
-    if(appState.isTrashView) trashTab.classList.add('active');
-    else trashTab.classList.remove('active');
-    trashCount.textContent = `(\${appState.photos.filter(p => p.isDeleted).length})`;
-}
-
-function renderPhotos() {
-    galleryGrid.innerHTML = '';
-    if (appState.isTrashView) {
-        currentViewTitle.textContent = "Lixeira";
-        uploadBox.style.display = 'none';
-    } else {
-        currentViewTitle.textContent = appState.currentFolder || "Nenhuma pasta";
-        uploadBox.style.display = appState.currentFolder ? 'block' : 'none';
-    }
-
-    const filtered = appState.photos.filter(p => appState.isTrashView ? p.isDeleted : (!p.isDeleted && p.folder === appState.currentFolder));
-
-    if(filtered.length === 0) {
-        galleryGrid.innerHTML = `&lt;p style="color: #666; grid-column: 1/-1; text-align: center;"&gt;Nenhuma foto por aqui.&lt;/p&gt;`;
-        return;
-    }
-
-    filtered.forEach(photo => {
-        const card = document.createElement('div');
-        card.className = 'photo-card';
-        card.innerHTML = `
-            &lt;div class="img-container"&gt;&lt;img src="\${photo.src}"&gt;&lt;/div&gt;
-            &lt;div class="photo-info"&gt;\${photo.name}&lt;/div&gt;
-            &lt;div class="card-actions"&gt;
-                \${appState.isTrashView ? 
-                    `&lt;button class="btn-action restore" onclick="restorePhoto('\${photo.id}')"&gt;Restaurar&lt;/button&gt;
-                     &lt;button class="btn-action delete" onclick="permaDeletePhoto('\${photo.id}')"&gt;Excluir&lt;/button&gt;` : 
-                    `&lt;button class="btn-action delete" onclick="deletePhoto('\${photo.id}')"&gt;Mover p/ Lixeira&lt;/button&gt;`
+        window.restorePhoto = function(id) {
+            const photo = appState.photos.find(p => p.id === id);
+            if(photo) {
+                photo.isDeleted = false;
+                if(!appState.folders.includes(photo.folder)) {
+                    photo.folder = appState.folders[0] || 'Minhas Fotos';
+                    if(!appState.folders.includes(photo.folder) && photo.folder) {
+                        appState.folders.push(photo.folder);
+                    }
                 }
-            &lt;/div&gt;
-        `;
-        card.querySelector('.img-container').addEventListener('click', () => {
-            lightboxImg.src = photo.src;
-            lightbox.classList.add('active');
-        });
-        galleryGrid.appendChild(card);
-    });
-}
-
-window.deletePhoto = function(id) {
-    const photo = appState.photos.find(p => p.id === id);
-    if(photo) { photo.isDeleted = true; saveState(); renderFolders(); renderPhotos(); }
-}
-
-window.restorePhoto = function(id) {
-    const photo = appState.photos.find(p => p.id === id);
-    if(photo) {
-        photo.isDeleted = false;
-        if(!appState.folders.includes(photo.folder)) {
-            photo.folder = appState.folders[0] || 'Minhas Fotos';
-            if(!appState.folders.includes(photo.folder) && photo.folder) appState.folders.push(photo.folder);
+                saveState();
+                renderFolders();
+                renderPhotos();
+            }
         }
-        saveState(); renderFolders(); renderPhotos();
-    }
-}
 
-window.permaDeletePhoto = function(id) {
-    if(confirm("Apagar permanentemente?")) {
-        appState.photos = appState.photos.filter(p => p.id !== id);
-        saveState(); renderFolders(); renderPhotos();
-    }
-}
+        window.permaDeletePhoto = function(id) {
+            if(confirm("Tem certeza que deseja apagar permanentemente esta foto? Esta ação não pode ser desfeita.")) {
+                appState.photos = appState.photos.filter(p => p.id !== id);
+                saveState();
+                renderFolders();
+                renderPhotos();
+            }
+        }
 
-function readFileAsDataURL(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (evt) => resolve({ name: file.name, src: evt.target.result });
-        reader.readAsDataURL(file);
-    });
-}
+        function setupEvents() {
+            // Upload de arquivos
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if(!appState.currentFolder) return;
 
-function setupEvents() {
-    fileInput.addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if(!appState.currentFolder || files.length === 0) return;
-        const imageFiles = files.filter(f => f.type.startsWith('image/'));
-        
-        const readResults = await Promise.all(imageFiles.map(f => readFileAsDataURL(f)));
-        readResults.forEach((result, index) => {
-            appState.photos.push({
-                id: Date.now().toString() + index + Math.random().toString(36).substr(2, 5),
-                name: result.name, src: result.src, folder: appState.currentFolder, isDeleted: false
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (!file.type.startsWith('image/')) continue;
+
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        appState.photos.push({
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                            name: file.name,
+                            src: evt.target.result,
+                            folder: appState.currentFolder,
+                            isDeleted: false
+                        });
+                        saveState();
+                        renderFolders();
+                        renderPhotos();
+                    };
+                    reader.readAsDataURL(file);
+                }
+                fileInput.value = ''; 
             });
-        });
-        saveState(); renderFolders(); renderPhotos();
-        fileInput.value = ''; 
-    });
 
-    addFolderBtn.addEventListener('click', () => {
-        const name = prompt("Nome da nova pasta:");
-        if(name && name.trim() !== "") {
-            const clean = name.trim();
-            if(appState.folders.includes(clean)) return alert("Já existe!");
-            appState.folders.push(clean); appState.currentFolder = clean; appState.isTrashView = false;
-            saveState(); renderFolders(); renderPhotos();
-        }
-    });
+            // Criar Pasta
+            addFolderBtn.addEventListener('click', () => {
+                const name = prompt("Digite o nome da nova pasta:");
+                if(name && name.trim() !== "") {
+                    const cleanName = name.trim();
+                    if(appState.folders.includes(cleanName)) {
+                        alert("Uma pasta com esse nome já existe!");
+                        return;
+                    }
+                    appState.folders.push(cleanName);
+                    appState.currentFolder = cleanName;
+                    appState.isTrashView = false;
+                    saveState();
+                    renderFolders();
+                    renderPhotos();
+                }
+            });
 
-    trashTab.addEventListener('click', () => { appState.isTrashView = true; appState.currentFolder = ''; renderFolders(); renderPhotos(); });
-    closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
-    lightbox.addEventListener('click', (e) => { if (e.target !== lightboxImg &amp;&amp; e.target !== closeBtn) lightbox.classList.remove('active'); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lightbox.classList.remove('active'); });
-}
+            // Aba Lixeira
+            trashTab.addEventListener('click', () => {
+                appState.isTrashView = true;
+                appState.currentFolder = '';
+                renderFolders();
+                renderPhotos();
+            });
 
-init();</code></pre>
-        </div>
-    </div>
-
-    <script>
-        function openTab(evt, tabId) {
-            // Esconde todo o conteúdo de abas
-            const tabContents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
-
-            // Remove a classe "active" de todos os botões
-            const tabBtns = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < tabBtns.length; i++) {
-                tabBtns[i].classList.remove("active");
-            }
-
-            // Mostra a aba atual e marca o botão como ativo
-            document.getElementById(tabId).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-
-        function copyCode(codeId) {
-            const codeText = document.getElementById(codeId).innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                alert("Código copiado para a área de transferência!");
-            }).catch(err => {
-                console.error('Erro ao copiar código: ', err);
+            // Fechar Lightbox
+            closeBtn.addEventListener('click', () => lightbox.classList.remove('active'));
+            lightbox.addEventListener('click', (e) => {
+                if (e.target !== lightboxImg && e.target !== closeBtn) lightbox.classList.remove('active');
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') lightbox.classList.remove('active');
             });
         }
+
+        init();
     </script>
 </body>
 </html>
