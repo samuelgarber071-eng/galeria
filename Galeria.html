@@ -37,7 +37,7 @@
         h1 { margin-bottom: 5px; font-weight: 600; }
         .subtitle { color: #aaa; font-size: 0.9rem; margin-top: 0; }
 
-        /* Layout Principal */
+        /* Sidebar e Layout Principal */
         .main-container {
             display: flex;
             width: 100%;
@@ -45,7 +45,7 @@
             gap: 20px;
         }
 
-        /* Menu lateral */
+        /* Menu lateral (Pastas e Lixeira) */
         .sidebar {
             width: 250px;
             background: var(--card-bg);
@@ -95,7 +95,6 @@
             cursor: pointer;
             font-weight: bold;
             display: none;
-            font-size: 1.1rem;
         }
 
         .folder-item:hover .delete-folder-btn {
@@ -112,13 +111,12 @@
             cursor: pointer;
             margin-bottom: 10px;
             font-weight: bold;
-            transition: background 0.2s;
         }
         .btn-side:hover { background: #3a3a3a; }
 
         /* Área de Conteúdo */
         .content-area {
-            flex: 1; /* CORRIGIDO: de flex-1: 1 para flex: 1 */
+            flex-1: 1;
             width: calc(100% - 270px);
         }
 
@@ -139,7 +137,6 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.2s;
         }
         .file-input-label:hover { background-color: var(--accent-hover); }
         #file-input { display: none; }
@@ -158,7 +155,7 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             position: relative;
-            /* CORRIGIDO: Removido 'group: hover;' inválido */
+            group: hover;
         }
 
         .img-container {
@@ -175,11 +172,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s;
-        }
-        
-        .img-container:hover img {
-            transform: scale(1.05);
         }
 
         .photo-info {
@@ -197,19 +189,16 @@
             display: flex;
             justify-content: space-around;
             padding: 5px 10px 10px 10px;
-            gap: 5px;
         }
 
         .btn-action {
-            flex: 1;
             background: #2a2a2a;
             border: none;
             color: white;
-            padding: 6px;
+            padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.8rem;
-            transition: background 0.2s;
         }
         .btn-action.delete { background: var(--danger-color); }
         .btn-action.delete:hover { background: var(--danger-hover); }
@@ -245,7 +234,8 @@
     <div class="main-container">
         <aside class="sidebar">
             <h3>Pastas</h3>
-            <ul class="folder-list" id="folders-container"></ul>
+            <ul class="folder-list" id="folders-container">
+                </ul>
             <button class="btn-side" id="add-folder-btn">+ Criar Pasta</button>
             <hr style="border-color: #333; margin: 15px 0;">
             <div class="folder-item" id="trash-tab">
@@ -263,7 +253,8 @@
                 </div>
             </div>
 
-            <div class="gallery-grid" id="gallery-grid"></div>
+            <div class="gallery-grid" id="gallery-grid">
+                </div>
         </main>
     </div>
 
@@ -273,7 +264,7 @@
     </div>
 
     <script>
-        // Banco de dados em memória e sincronizado com LocalStorage
+        // Banco de dados em memória e sincronizado com LocalStorage estrutural
         let appState = {
             folders: ['Minhas Fotos', 'Viagens', 'Trabalho'],
             currentFolder: 'Minhas Fotos',
@@ -283,24 +274,20 @@
 
         // Tenta carregar dados anteriores salvos no navegador
         if(localStorage.getItem('photo_os_state')) {
-            try {
-                const saved = JSON.parse(localStorage.getItem('photo_os_state'));
-                appState = saved;
-                // Garante reset de view padrão ao iniciar se não houver pasta ativa válida
-                if (!appState.folders.includes(appState.currentFolder)) {
-                    appState.currentFolder = appState.folders[0] || '';
-                }
-                appState.isTrashView = false;
-            } catch(e) {
-                console.error("Erro ao carregar o estado do localStorage", e);
-            }
+            const saved = JSON.parse(localStorage.getItem('photo_os_state'));
+            // Como imagens em Base64 podem ser pesadas, salvamos apenas a estrutura das fotos se necessário, 
+            // mas para esse app rodar offline puro, salvaremos tudo no estado local.
+            appState = saved;
+            // Garante reset de view ao recarregar
+            appState.currentFolder = appState.folders[0] || 'Minhas Fotos';
+            appState.isTrashView = false;
         }
 
         function saveState() {
             try {
                 localStorage.setItem('photo_os_state', JSON.stringify(appState));
             } catch (e) {
-                alert("⚠️ Limite de espaço atingido! O navegador não conseguiu salvar esta última foto permanentemente (Limite do LocalStorage é de ~5MB).");
+                console.log("Aviso: Limite de cota do LocalStorage atingido para persistência longa. As fotos ainda funcionam nesta sessão.");
             }
         }
 
@@ -347,6 +334,7 @@
                 li.querySelector('.delete-folder-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     if(confirm(`Deseja apagar a pasta "${folder}"? As fotos dela irão para a lixeira.`)) {
+                        // Envia fotos da pasta para lixeira
                         appState.photos.forEach(p => {
                             if(p.folder === folder) p.isDeleted = true;
                         });
@@ -404,7 +392,7 @@
                     <div class="card-actions">
                         ${appState.isTrashView ? 
                             `<button class="btn-action restore" onclick="restorePhoto('${photo.id}')">Restaurar</button>
-                             <button class="btn-action delete" onclick="permaDeletePhoto('${photo.id}')">Excluir</button>` : 
+                             <button class="btn-action delete" onclick="permaDeletePhoto('${photo.id}')">Excluir Definitivo</button>` : 
                             `<button class="btn-action delete" onclick="deletePhoto('${photo.id}')">Mover p/ Lixeira</button>`
                         }
                     </div>
@@ -420,7 +408,7 @@
             });
         }
 
-        // Ações Globais expostas no escopo window para os botões dinâmicos
+        // Ações Globais/Janelas de Fotos (Expostas no escopo global para os cliques do onclick inline)
         window.deletePhoto = function(id) {
             const photo = appState.photos.find(p => p.id === id);
             if(photo) {
@@ -435,11 +423,10 @@
             const photo = appState.photos.find(p => p.id === id);
             if(photo) {
                 photo.isDeleted = false;
+                // Se a pasta original dele foi excluída, joga para a primeira pasta ativa existente
                 if(!appState.folders.includes(photo.folder)) {
                     photo.folder = appState.folders[0] || 'Minhas Fotos';
-                    if(!appState.folders.includes(photo.folder) && photo.folder) {
-                        appState.folders.push(photo.folder);
-                    }
+                    if(!appState.folders.includes(photo.folder)) appState.folders.push(photo.folder);
                 }
                 saveState();
                 renderFolders();
@@ -481,7 +468,7 @@
                     };
                     reader.readAsDataURL(file);
                 }
-                fileInput.value = ''; 
+                fileInput.value = ''; // limpa o seletor
             });
 
             // Criar Pasta
@@ -520,6 +507,7 @@
             });
         }
 
+        // Executa
         init();
     </script>
 </body>
